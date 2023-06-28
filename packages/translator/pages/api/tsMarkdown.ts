@@ -1,20 +1,18 @@
-import { CallbackManager } from "langchain/callbacks";
-import { LLMChain } from "langchain/chains";
-import { OpenAI } from "langchain/llms/openai";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { CallbackManager } from 'langchain/callbacks';
+import { LLMChain } from 'langchain/chains';
+import { OpenAI } from 'langchain/llms/openai';
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 
-import {
-  PromptTemplate
-} from "langchain/prompts";
-import { NextResponse } from "next/server";
+import { PromptTemplate } from 'langchain/prompts';
+import { NextResponse } from 'next/server';
 
-import { ChainValues } from "langchain/dist/schema";
+import { ChainValues } from 'langchain/dist/schema';
 
-import { TranslateBody } from "@/types/types";
-import { TranslateMarkdownPrompt } from "@/utils/prompt";
+import { TranslateBody } from '@/types/types';
+import { TranslateMarkdownPrompt } from '@/utils/prompt';
 
 export const config = {
-  runtime: "edge",
+  runtime: 'edge',
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -36,10 +34,10 @@ const handler = async (req: Request): Promise<Response> => {
           // console.log('====================handleLLMEnd====================');
         },
         handleLLMError: async (error: any) => {
-          console.log("handleLLMError", error);
+          console.log('handleLLMError', error);
         },
       }),
-      temperature: 0.1
+      temperature: 0.1,
     });
     const splitter = new RecursiveCharacterTextSplitter({
       chunkSize: 800,
@@ -48,21 +46,22 @@ const handler = async (req: Request): Promise<Response> => {
     const splitChunks = await splitter.createDocuments([inputCode]);
     const prompt = new PromptTemplate({
       template: TranslateMarkdownPrompt,
-      inputVariables: [
-        "inputLanguage",
-        "outputLanguage",
-        "inputCode",
-      ]
+      inputVariables: ['inputLanguage', 'outputLanguage', 'inputCode'],
     });
     const chain = new LLMChain({ llm: model, prompt: prompt });
 
-    const callChain = async ({ pageContent }: typeof splitChunks[0]): Promise<ChainValues> => {
+    const callChain = async ({
+      pageContent,
+    }: (typeof splitChunks)[0]): Promise<ChainValues> => {
       return new Promise((resolve, reject) => {
-        chain.call({ inputLanguage, outputLanguage, inputCode: pageContent }).then(result => {
-          resolve(result);
-        }).catch(error => {
-          reject(error);
-        });
+        chain
+          .call({ inputLanguage, outputLanguage, inputCode: pageContent })
+          .then((result) => {
+            resolve(result);
+          })
+          .catch((error) => {
+            reject(error);
+          });
       });
     };
     const translateData = async (): Promise<void> => {
@@ -77,13 +76,13 @@ const handler = async (req: Request): Promise<Response> => {
     translateData();
     return new NextResponse(stream.readable, {
       headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
       },
     });
   } catch (error) {
     console.error(error);
-    return new Response("Error", { status: 500 });
+    return new Response('Error', { status: 500 });
   }
 };
 

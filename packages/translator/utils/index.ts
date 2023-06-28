@@ -1,16 +1,15 @@
-import endent from "endent";
+import endent from 'endent';
 import {
   ParsedEvent,
   ReconnectInterval,
   createParser,
-} from "eventsource-parser";
+} from 'eventsource-parser';
 
 const createPrompt = (
   inputLanguage: string,
   outputLanguage: string,
   inputCode: string,
 ): string => {
-
   return endent`
     You are an expert translator in all languages. Translate the wording from "${inputLanguage}"  to "${outputLanguage}". Do not include \`\`\`.
     do not write explanations.
@@ -36,14 +35,14 @@ export const OpenAIStream = async (
   model: string,
 ): Promise<ReadableStream<any>> => {
   const prompt = createPrompt(inputLanguage, outputLanguage, inputCode);
-  const system = { role: "system", content: prompt };
+  const system = { role: 'system', content: prompt };
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
     },
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify({
       model,
       messages: [system],
@@ -67,11 +66,11 @@ export const OpenAIStream = async (
 
   const stream = new ReadableStream({
     async start(controller) {
-      const onParse = (event: ParsedEvent | ReconnectInterval):void => {
-        if (event.type === "event") {
+      const onParse = (event: ParsedEvent | ReconnectInterval): void => {
+        if (event.type === 'event') {
           const data = event.data;
 
-          if (data === "[DONE]") {
+          if (data === '[DONE]') {
             controller.close();
             return;
           }

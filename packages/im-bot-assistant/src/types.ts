@@ -1,77 +1,73 @@
 interface ZoomBotMessageRequestContent {
-  head?: ZoomBotMessageRequestContentHeader,
-  body: ZoomBotMessageRequestContentBody[]
+  head?: ZoomBotMessageRequestContentHeader;
+  body: ZoomBotMessageRequestContentBody[];
 }
 interface ZoomBotMessageRequestContentHeader {
-  text: string,
+  text: string;
   sub_head?: {
-    text: string
-  }
+    text: string;
+  };
 }
 interface AttachmentMessage {
-  type: "attachments",
-  img_url: string,
-  ext?: "jpg" | "png" | "gif" | "jpeg",
-  resource_url: string,
+  type: 'attachments';
+  img_url: string;
+  ext?: 'jpg' | 'png' | 'gif' | 'jpeg';
+  resource_url: string;
   information: {
     title: {
-      text: string,
-      style?: Record<string, string>
-    },
+      text: string;
+      style?: Record<string, string>;
+    };
     description: {
-      text: string,
-      style?: Record<string, string>
-    }
-  }
+      text: string;
+      style?: Record<string, string>;
+    };
+  };
 }
 interface TextMessage {
-  type: "message",
-  text: string
+  type: 'message';
+  text: string;
 }
 interface SectionMessage {
-  type: "section",
+  type: 'section';
   sections: [
     {
-      type: "message",
-      style: Record<string, string>,
-      text?: string,
-      link?: string // todo
-    }
-  ]
-
+      type: 'message';
+      style: Record<string, string>;
+      text?: string;
+      link?: string; // todo
+    },
+  ];
 }
 
 interface FieldsMessage {
-  type: "fields",
+  type: 'fields';
   items: {
-    key: string,
-    value: string,
-    link?: string | undefined
-  }[]
+    key: string;
+    value: string;
+    link?: string | undefined;
+  }[];
 }
 
 interface ZoomBotMessageRequestContentBody {
-  type: "section" | "message" | "fields" | "attachments",
-  sidebar_color?: string,
-  sections?: [
-    AttachmentMessage
-    | TextMessage | SectionMessage | FieldsMessage
-  ],
-  text?: string,
-  footer?: string,
-  footer_icon?: string // todo
+  type: 'section' | 'message' | 'fields' | 'attachments';
+  sidebar_color?: string;
+  sections?: [AttachmentMessage | TextMessage | SectionMessage | FieldsMessage];
+  text?: string;
+  footer?: string;
+  footer_icon?: string; // todo
 }
 
 type ZoomChatContext = {
-  robot_jid: string,
-  to_jid: string,
-  account_id: string,
-  user_jid: string
-}
+  robot_jid: string;
+  to_jid: string;
+  account_id: string;
+  user_jid: string;
+};
 type ZoomChatbotParams = ZoomChatContext & {
-  content: ZoomBotMessageRequestContent,
-  is_markdown_support?: boolean
-}
+  content: ZoomBotMessageRequestContent;
+  is_markdown_support?: boolean;
+};
 
 export {
   ZoomChatContext,
@@ -213,203 +209,203 @@ export {
 
 export interface MessageWithHeader {
   head?: {
-    text: string,
+    text: string;
     style?: {
-      color?: string,
-      bold?: boolean,
-      italic?: boolean,
-      [k: string]: unknown
-    },
-    [k: string]: unknown
-  },
-  [k: string]: unknown
+      color?: string;
+      bold?: boolean;
+      italic?: boolean;
+      [k: string]: unknown;
+    };
+    [k: string]: unknown;
+  };
+  [k: string]: unknown;
 }
 
 export interface MessageWithSubHeader {
   head?: {
-    text: string,
+    text: string;
     style?: {
-      color?: string,
-      bold?: boolean,
-      italic?: boolean,
-      [k: string]: unknown
-    },
+      color?: string;
+      bold?: boolean;
+      italic?: boolean;
+      [k: string]: unknown;
+    };
     sub_head?: {
-      text: string,
+      text: string;
       style?: {
-        color?: string,
-        bold?: boolean,
-        italic?: boolean,
-        [k: string]: unknown
-      },
-      [k: string]: unknown
-    },
-    [k: string]: unknown
-  },
-  [k: string]: unknown
+        color?: string;
+        bold?: boolean;
+        italic?: boolean;
+        [k: string]: unknown;
+      };
+      [k: string]: unknown;
+    };
+    [k: string]: unknown;
+  };
+  [k: string]: unknown;
 }
 
 export interface MessageWithText {
   head?: {
-    text: string,
+    text: string;
     style?: {
-      color?: string,
-      bold?: boolean,
-      italic?: boolean,
-      [k: string]: unknown
-    },
+      color?: string;
+      bold?: boolean;
+      italic?: boolean;
+      [k: string]: unknown;
+    };
     sub_head?: {
-      text: string,
+      text: string;
       style?: {
-        color?: string,
-        bold?: boolean,
-        italic?: boolean,
-        [k: string]: unknown
-      },
-      [k: string]: unknown
-    },
-    [k: string]: unknown
-  },
-  [k: string]: unknown
+        color?: string;
+        bold?: boolean;
+        italic?: boolean;
+        [k: string]: unknown;
+      };
+      [k: string]: unknown;
+    };
+    [k: string]: unknown;
+  };
+  [k: string]: unknown;
 }
 
 export interface MySchema {
   head?: {
-    text: string,
+    text: string;
     style?: {
-      color?: string,
-      bold?: boolean,
-      italic?: boolean,
-      [k: string]: unknown
-    },
+      color?: string;
+      bold?: boolean;
+      italic?: boolean;
+      [k: string]: unknown;
+    };
     sub_head?: {
-      text: string,
+      text: string;
       style?: {
-        color?: string,
-        bold?: boolean,
-        italic?: boolean,
-        [k: string]: unknown
-      },
-      [k: string]: unknown
-    },
-    [k: string]: unknown
-  },
+        color?: string;
+        bold?: boolean;
+        italic?: boolean;
+        [k: string]: unknown;
+      };
+      [k: string]: unknown;
+    };
+    [k: string]: unknown;
+  };
   body?: {
-    type: "select",
-    text: string,
+    type: 'select';
+    text: string;
     selected_item?: {
-      text: string,
-      value: string,
-      [k: string]: unknown
-    },
+      text: string;
+      value: string;
+      [k: string]: unknown;
+    };
     /**
      * Required if `static_source` is  **not** set.
      */
     select_items?: {
-      text: string,
-      value: string,
-      [k: string]: unknown
-    }[],
+      text: string;
+      value: string;
+      [k: string]: unknown;
+    }[];
     /**
      * Required if `select_items` is  **not** set.
      */
-    static_source?: "members" | "channels",
-    [k: string]: unknown
-  }[],
-  [k: string]: unknown
+    static_source?: 'members' | 'channels';
+    [k: string]: unknown;
+  }[];
+  [k: string]: unknown;
 }
 
 export interface MessageWithFormField {
   head?: {
-    text: string,
+    text: string;
     style?: {
-      color?: string,
-      bold?: boolean,
-      italic?: boolean,
-      [k: string]: unknown
-    },
+      color?: string;
+      bold?: boolean;
+      italic?: boolean;
+      [k: string]: unknown;
+    };
     sub_head?: {
-      text: string,
+      text: string;
       style?: {
-        color?: string,
-        bold?: boolean,
-        italic?: boolean,
-        [k: string]: unknown
-      },
-      [k: string]: unknown
-    },
-    [k: string]: unknown
-  },
+        color?: string;
+        bold?: boolean;
+        italic?: boolean;
+        [k: string]: unknown;
+      };
+      [k: string]: unknown;
+    };
+    [k: string]: unknown;
+  };
   body?: {
-    type: "fields",
+    type: 'fields';
     items: {
-      key: string,
-      value: string,
-      short?: boolean,
+      key: string;
+      value: string;
+      short?: boolean;
       style?: {
-        color?: string,
-        bold?: boolean,
-        italic?: boolean,
-        [k: string]: unknown
-      },
-      [k: string]: unknown
-    }[],
-    [k: string]: unknown
-  }[],
-  [k: string]: unknown
+        color?: string;
+        bold?: boolean;
+        italic?: boolean;
+        [k: string]: unknown;
+      };
+      [k: string]: unknown;
+    }[];
+    [k: string]: unknown;
+  }[];
+  [k: string]: unknown;
 }
 
 export interface MessageWithAttachment {
   head?: {
-    text: string,
+    text: string;
     style?: {
-      color?: string,
-      bold?: boolean,
-      italic?: boolean,
-      [k: string]: unknown
-    },
+      color?: string;
+      bold?: boolean;
+      italic?: boolean;
+      [k: string]: unknown;
+    };
     sub_head?: {
-      text: string,
+      text: string;
       style?: {
-        color?: string,
-        bold?: boolean,
-        italic?: boolean,
-        [k: string]: unknown
-      },
-      [k: string]: unknown
-    },
-    [k: string]: unknown
-  },
+        color?: string;
+        bold?: boolean;
+        italic?: boolean;
+        [k: string]: unknown;
+      };
+      [k: string]: unknown;
+    };
+    [k: string]: unknown;
+  };
   body?: {
-    type: "attachments",
-    resource_url: string,
-    img_url: string,
+    type: 'attachments';
+    resource_url: string;
+    img_url: string;
     information: {
       title: {
-        text: string,
+        text: string;
         style?: {
-          color?: string,
-          bold?: boolean,
-          italic?: boolean,
-          [k: string]: unknown
-        },
-        [k: string]: unknown
-      },
+          color?: string;
+          bold?: boolean;
+          italic?: boolean;
+          [k: string]: unknown;
+        };
+        [k: string]: unknown;
+      };
       description?: {
-        text: string,
+        text: string;
         style?: {
-          color?: string,
-          bold?: boolean,
-          italic?: boolean,
-          [k: string]: unknown
-        },
-        [k: string]: unknown
-      },
-      [k: string]: unknown
-    },
-    ext?: "pdf" | "txt" | "doc" | "xlsx" | "zip" | "jpeg" | "png",
-    size?: number,
-    [k: string]: unknown
-  }[],
-  [k: string]: unknown
+          color?: string;
+          bold?: boolean;
+          italic?: boolean;
+          [k: string]: unknown;
+        };
+        [k: string]: unknown;
+      };
+      [k: string]: unknown;
+    };
+    ext?: 'pdf' | 'txt' | 'doc' | 'xlsx' | 'zip' | 'jpeg' | 'png';
+    size?: number;
+    [k: string]: unknown;
+  }[];
+  [k: string]: unknown;
 }

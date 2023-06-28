@@ -1,38 +1,36 @@
-import Link from "next/link";
+import Link from 'next/link';
 
-import { Logo } from "@/components/icons";
-import { User } from "@/components/User";
+import { Logo } from '@/components/icons';
+import { User } from '@/components/User';
 interface LayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
-const Layout = ({
-  children
-}: LayoutProps): JSX.Element => {
+const Layout = ({ children }: LayoutProps): JSX.Element => {
   return (
     <div>
-      <nav className="flex justify-between items-center
-        font-medium text-base leading-7 text-slate-900
-        mt-3 pb-3 ml-3  mx-auto max-w-container px-4 sm:px-6 lg:px-8
+      <nav
+        className="max-w-container mx-auto ml-3
+        mt-3 flex items-center justify-between
+        px-4 pb-3 text-base  font-medium leading-7 text-slate-900 sm:px-6 lg:px-8
         "
       >
         <div className="">
-          <Logo width={"36px"} height={"36px"} className="inline"/> Translator
+          <Logo width={'36px'} height={'36px'} className="inline" /> LangBridge
         </div>
         <div className="flex items-center">
           <Link href="/" className="mr-5">
-          🏠 Wordings Properties
+            Properties
           </Link>
           <Link href="/md" className="mr-5">
-          📝 Markdown File
+            Markdown
           </Link>
-          <Link href="/convert" className="mr-5">
+          {/* <Link href="/convert" className="mr-5">
           🚢 Convert
-          </Link>
+          </Link> */}
           {/* <Link href="/csv" className="mr-5">
             🚧 CSV Loader (in progress)
           </Link> */}
-          <User/>
-
+          <User />
         </div>
       </nav>
       {children}

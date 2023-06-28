@@ -1,4 +1,4 @@
-const Github = ({ ...props }):JSX.Element => {
+const Github = ({ ...props }): JSX.Element => {
   return (
     <svg
       width="24"

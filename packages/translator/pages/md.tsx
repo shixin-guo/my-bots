@@ -1,52 +1,49 @@
-import { default as NextImage } from "next/image";
-import { useMemo, useState } from "react";
+import { default as NextImage } from 'next/image';
+import { useMemo, useState } from 'react';
 
-import copyToClipboard from "@/utils/copyToClipboard";
-import { CodeBlock } from "@/components/CodeBlock";
-import Layout from "@/components/Layout";
-import { MarkdownTemplate as testCode } from "@/test/mockData";
+import copyToClipboard from '@/utils/copyToClipboard';
+import { CodeBlock } from '@/components/CodeBlock';
+import Layout from '@/components/Layout';
+import { MarkdownTemplate as testCode } from '@/test/mock';
 enum Languages {
-  CN = "汉语",
-  EN = "English",
+  CN = '汉语',
+  EN = 'English',
 }
 const API4Markdown = {
-  TRANSLATE: "/api/tsMarkdown",
-  OPTIMIZE: "/api/optimizeMarkdown",
+  TRANSLATE: '/api/tsMarkdown',
+  OPTIMIZE: '/api/optimizeMarkdown',
 };
 interface handleTranslateProps {
-  originLang: Languages,
-  exceptLang: Languages,
-  content: string
+  originLang: Languages;
+  exceptLang: Languages;
+  content: string;
 }
 
 export default function Markdown(): JSX.Element {
-  const [inputCode, setInputCode] = useState<string>("");
-  const [outputCode, setOutputCode] = useState<string>("");
+  const [inputCode, setInputCode] = useState<string>('');
+  const [outputCode, setOutputCode] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [inputLang, setInputLang] = useState<Languages>(Languages.EN);
   const outputType = useMemo(() => {
     return inputLang === Languages.CN ? Languages.EN : Languages.CN;
   }, [inputLang]);
-  const reverseInputAndOutput = ():void => {
+  const reverseInputAndOutput = (): void => {
     setInputLang(inputLang === Languages.CN ? Languages.EN : Languages.CN);
   };
   const handleTranslate = async (
-    {
-      originLang,
-      exceptLang,
-      content }: handleTranslateProps,
-    isOptimize: boolean
+    { originLang, exceptLang, content }: handleTranslateProps,
+    isOptimize: boolean,
   ): Promise<void> => {
     if (originLang === exceptLang) {
-      alert("Please select different languages.");
+      alert('Please select different languages.');
       return;
     }
     if (!content) {
-      alert("Please enter some code.");
+      alert('Please enter some code.');
       return;
     }
 
-    setOutputCode("");
+    setOutputCode('');
 
     const controller = new AbortController();
 
@@ -59,13 +56,13 @@ export default function Markdown(): JSX.Element {
     const response = await fetch(
       isOptimize ? API4Markdown.OPTIMIZE : API4Markdown.TRANSLATE,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         signal: controller.signal,
         body: JSON.stringify(body),
-      }
+      },
     );
     // const response = await fetch("/api/optimizeMarkdown", {
     //   method: "POST",
@@ -78,7 +75,7 @@ export default function Markdown(): JSX.Element {
 
     if (!response.ok) {
       // setLoading(false);
-      alert("Something went wrong.");
+      alert('Something went wrong.');
       return;
     }
 
@@ -86,7 +83,7 @@ export default function Markdown(): JSX.Element {
 
     if (!data) {
       // setLoading(false);
-      alert("Something went wrong.");
+      alert('Something went wrong.');
       return;
     }
 
@@ -101,19 +98,20 @@ export default function Markdown(): JSX.Element {
       setOutputCode((prevCode) => prevCode + chunkValue);
     }
   };
-  const translateHandler = async({
-    isOptimize = false
-  }): Promise<void> => {
+  const translateHandler = async ({ isOptimize = false }): Promise<void> => {
     if (!inputCode) {
-      alert("Please enter some code.");
+      alert('Please enter some code.');
       return;
     }
     setLoading(true);
-    await handleTranslate({
-      originLang: inputLang,
-      exceptLang: outputType,
-      content: inputCode,
-    }, isOptimize);
+    await handleTranslate(
+      {
+        originLang: inputLang,
+        exceptLang: outputType,
+        content: inputCode,
+      },
+      isOptimize,
+    );
 
     copyToClipboard(outputCode);
     setLoading(false);
@@ -121,49 +119,40 @@ export default function Markdown(): JSX.Element {
 
   return (
     <>
-      <div className="flex h-full min-h-screen flex-col items-center
-      bg-[url('https://tailwindui.com/img/beams-home@95.jpg')]
-       px-4 pb-20 sm:px-10 font-sans">
+      <div className="flex h-full min-h-screen flex-col items-center bg-[url('https://tailwindui.com/img/beams-home@95.jpg')] px-4 pb-20 font-sans sm:px-10">
         <div className="mt-4 flex items-center space-x-2">
           <button
-            className="w-[160px] cursor-pointer rounded-md
-             bg-green-500 px-4 py-2 font-bold
-              hover:bg-green-600 active:bg-green-700 text-slate-50"
+            className="w-[160px] cursor-pointer rounded-md bg-green-500 px-4 py-2 font-bold text-slate-50 hover:bg-green-600 active:bg-green-700"
             onClick={() => translateHandler({ isOptimize: true })}
             disabled={loading}
           >
-            {"Spelling Check"}
+            {'Spelling Check'}
           </button>
           <button
-            className="w-[160px] cursor-pointer rounded-md
-             bg-blue-500 px-4 py-2 font-bold
-              hover:bg-blue-600 active:bg-blue-700 text-slate-50"
+            className="w-[160px] cursor-pointer rounded-md bg-blue-500 px-4 py-2 font-bold text-slate-50 hover:bg-blue-600 active:bg-blue-700"
             onClick={() => translateHandler({ isOptimize: false })}
             disabled={loading}
           >
-            {"Start Translate"}
+            {'Start Translate'}
           </button>
-
         </div>
-        <div className="mt-4 -mb-8 flex items-center space-x-2 z-50">
+        <div className="z-50 -mb-8 mt-4 flex items-center space-x-2">
           <button
-            className="cursor-pointer rounded-md
-              px-4 font-bold
-               text-slate-50"
+            className="cursor-pointer rounded-md px-4 font-bold text-slate-50"
             onClick={reverseInputAndOutput}
           >
             <NextImage
               className="rounded-lg"
               width={30}
               height={30}
-              src={"/convert.svg"}
-              alt={"Product Image"}
+              src={'/convert.svg'}
+              alt={'Product Image'}
             />
           </button>
         </div>
 
-        <div className="flex w-full mb-4 max-w-[1200px] flex-col justify-between sm:flex-row sm:space-x-4">
-          <div className="h-full flex flex-col justify-center space-y-2 sm:w-2/4">
+        <div className="mb-4 flex w-full max-w-[1200px] flex-col justify-between sm:flex-row sm:space-x-4">
+          <div className="flex h-full flex-col justify-center space-y-2 sm:w-2/4">
             <div className="text-center text-xl font-bold">{inputLang}</div>
             <CodeBlock
               code={inputCode}

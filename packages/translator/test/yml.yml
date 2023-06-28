@@ -1,0 +1,53 @@
+form.ip: IP
+form.domain: Domain
+form.domain_or_ip_mapping: Domain or External IP mapping
+form.port: Port
+form.nearest_data_center: Nearest Data Center
+form.alias: Alias
+actions.confirm: Confirm
+actions.cancel: Cancel
+actions.add_machine: Add machine
+actions.add_server: Add server
+actions.search_machine: Search machine/server
+actions.delete: Delete
+actions.stop: Stop
+actions.start: Start
+actions.restart: Restart
+actions.suspend: Suspend
+actions.resume: Resume
+actions.configure: Configure
+actions.filter: Filter
+actions.download: Download
+actions.delete_server: Delete server
+actions.delete_machine: Delete machine
+actions.delete_machine_hint: This machine will be removed from the list
+actions.export: Export
+actions.restart_all_servers: Restart All Servers
+actions.stop_all_servers: Stop All Servers
+general.no_results: No results
+general.logs: Logs
+general.machine: Machine
+general.server: Server
+general.name: Name
+general.type: Type
+general.version: Version | Versions
+general.settings: Settings
+general.hybrid_data_center_location: Hybrid Data Center Location
+general.status: Status
+general.are_you_sure: Are you sure?
+general.action_success: Operation completed successfully
+# general.private_ip: Private IPserver.configure_restart_warning: Re-configuring running server will cause it to restart
+server.configure_success: Server configured
+server.add_success: Server added
+server.delete_success: Server deleted
+server.stop_all_success: All servers stopped successfully
+server.restart_all_success: All servers restarted successfully
+machine.delete_success: Machine deleted
+machine.config: Config
+version.application_name: Application Name
+version.application_version: Application Version
+actions.upgrade: Upgrade
+server.upgrade_success: Server upgrade success
+version.latest_version: Latest Version
+actions.download_updates: Download Updates
+general.download_success: Download success

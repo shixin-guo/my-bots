@@ -1,14 +1,14 @@
-import { FC } from "react";
+import { FC } from 'react';
 
-import { OpenAIModel } from "@/types/types";
+import { OpenAIModel } from '@/types/types';
 
 interface Props {
-  model: OpenAIModel,
-  onChange: (model: OpenAIModel) => void
+  model: OpenAIModel;
+  onChange: (model: OpenAIModel) => void;
 }
 
 export const ModelSelect: FC<Props> = ({ model, onChange }) => {
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>):void => {
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
     onChange(e.target.value as OpenAIModel);
   };
 

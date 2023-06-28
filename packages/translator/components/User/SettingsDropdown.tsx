@@ -7,14 +7,14 @@ import {
   LogOut,
   Settings,
   User,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { getSession, signOut } from "next-auth/react";
-import { Session } from "next-auth";
+import { getSession, signOut } from 'next-auth/react';
+import { Session } from 'next-auth';
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,10 +24,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 
 interface Props {
-  session: Session
+  session: Session;
 }
 export function SettingsMenu({ session }: Props) {
   const user = session?.user;
@@ -39,10 +39,10 @@ export function SettingsMenu({ session }: Props) {
     signOut();
   };
   const handleOpenGithubReop = () => {
-    window.open("https:github.com/shixin-guo/my-bot", "_blank");
+    window.open('https:github.com/shixin-guo/my-bot', '_blank');
   };
   const handleOpenChange = (open: boolean) => {
-    console.log("open", open);
+    console.log('open', open);
   };
   return (
     <span>
@@ -79,14 +79,14 @@ export function SettingsMenu({ session }: Props) {
             </DropdownMenuItem> */}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={handleOpenGithubReop}>
+          {/* <DropdownMenuItem onSelect={handleOpenGithubReop}>
             <Github className="mr-2 h-4 w-4" />
             <span>GitHub</span>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <LifeBuoy className="mr-2 h-4 w-4" />
             <span>Support</span>
-          </DropdownMenuItem>
+          </DropdownMenuItem> */}
           {/* <DropdownMenuItem disabled>
             <Cloud className="mr-2 h-4 w-4" />
             <span>API</span>
@@ -100,6 +100,5 @@ export function SettingsMenu({ session }: Props) {
         </DropdownMenuContent>
       </DropdownMenu>
     </span>
-
   );
 }

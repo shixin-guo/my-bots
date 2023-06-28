@@ -1,15 +1,14 @@
-import React from "react"
+import React from 'react';
 
-import { GetServerSideProps } from "next"
+import { GetServerSideProps } from 'next';
 
-import SEO from "@/config/seo";
+import SEO from '@/config/seo';
 
-const Sitemap: React.FC = () => null
+const Sitemap: React.FC = () => null;
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   if (res) {
-
-    res.setHeader("Content-Type", "text/plain")
+    res.setHeader('Content-Type', 'text/plain');
     res.write(`# Block all crawlers for /accounts
 User-agent: *
 Disallow: /api/
@@ -18,12 +17,12 @@ Disallow: /api/
 User-agent: *
 Allow: /
 
-Sitemap: ${SEO?.openGraph?.url}/sitemap.xml`)
-    res.end()
+Sitemap: ${SEO?.openGraph?.url}/sitemap.xml`);
+    res.end();
   }
   return {
     props: {},
-  }
-}
+  };
+};
 
-export default Sitemap
+export default Sitemap;

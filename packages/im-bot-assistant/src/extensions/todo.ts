@@ -1,15 +1,19 @@
-import { config } from "dotenv";
+import { config } from 'dotenv';
 
-import { Client } from "@notionhq/client";
-import { CreatePageResponse, PageObjectResponse, UpdatePageResponse } from "@notionhq/client/build/src/api-endpoints";
+import { Client } from '@notionhq/client';
+import {
+  CreatePageResponse,
+  PageObjectResponse,
+  UpdatePageResponse,
+} from '@notionhq/client/build/src/api-endpoints';
 
-config({ path: ".env" });
+config({ path: '.env' });
 
 if (!process.env.NOTION_API_KEY) {
-  throw new Error("NOTION_API_KEY is not defined");
+  throw new Error('NOTION_API_KEY is not defined');
 }
 if (!process.env.NOTION_DATABASE_ID) {
-  throw new Error("NOTION_DATABASE_ID is not defined");
+  throw new Error('NOTION_DATABASE_ID is not defined');
 }
 
 const notion = new Client({
@@ -17,14 +21,19 @@ const notion = new Client({
 });
 
 const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID;
-let cachedTodoList: ({ name: string, id?: string } | undefined)[] = [];
+let cachedTodoList: ({ name: string; id?: string } | undefined)[] = [];
 
-type TodoItemType = { id: string, name: string, link?: string, created_time: string };
+type TodoItemType = {
+  id: string;
+  name: string;
+  link?: string;
+  created_time: string;
+};
 const getTodoList = async (completed?: boolean): Promise<TodoItemType[]> => {
   const databases = await notion.databases.query({
     database_id: NOTION_DATABASE_ID,
     filter: {
-      property: "Done",
+      property: 'Done',
       checkbox: {
         equals: Boolean(completed),
       },
@@ -46,15 +55,18 @@ const getTodoList = async (completed?: boolean): Promise<TodoItemType[]> => {
   return list.filter((item) => item !== undefined) as TodoItemType[];
 };
 
-const updateTodoItem = async ({ index, done }: {
-  index: number,
-  done: boolean
+const updateTodoItem = async ({
+  index,
+  done,
+}: {
+  index: number;
+  done: boolean;
 }): Promise<UpdatePageResponse> => {
-  if (typeof cachedTodoList[index]?.id !== "string") {
-    throw new Error("Todo item not found");
+  if (typeof cachedTodoList[index]?.id !== 'string') {
+    throw new Error('Todo item not found');
   }
   const todo = await notion.pages.update({
-    page_id: cachedTodoList[index]!.id || "",
+    page_id: cachedTodoList[index]!.id || '',
     properties: {
       Done: {
         checkbox: done,
@@ -77,28 +89,28 @@ const addTodoItem = async (text: string): Promise<CreatePageResponse> => {
 
 export const todoHandler = async (cmd: string[]): Promise<TodoItemType[]> => {
   const [_command, action, ...rest] = cmd;
-  const text = rest.join(" ");
+  const text = rest.join(' ');
   switch (action) {
-    case "list": {
+    case 'list': {
       return await getTodoList(false);
       break;
     }
-    case "finished": {
+    case 'finished': {
       return await getTodoList(true);
       break;
     }
-    case "add": {
+    case 'add': {
       await addTodoItem(text);
       return await getTodoList(false);
       break;
     }
-    case "update":
-    case "done" : {
+    case 'update':
+    case 'done': {
       await updateTodoItem({ index: Number(text), done: true });
       return await getTodoList(false);
       break;
     }
-    case "all": {
+    case 'all': {
       const completed = await getTodoList(true);
       const unCompleted = await getTodoList(false);
       return [...unCompleted, ...completed];

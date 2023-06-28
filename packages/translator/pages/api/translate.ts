@@ -1,8 +1,8 @@
-import { TranslateBody } from "@/types/types";
-import { OpenAIStream } from "@/utils";
+import { TranslateBody } from '@/types/types';
+import { OpenAIStream } from '@/utils';
 
 export const config = {
-  runtime: "edge",
+  runtime: 'edge',
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -13,12 +13,12 @@ const handler = async (req: Request): Promise<Response> => {
       inputLanguage,
       outputLanguage,
       inputCode,
-      "gpt-3.5-turbo"
+      'gpt-3.5-turbo',
     );
 
     return new Response(stream);
   } catch (error) {
-    return new Response("Error", { status: 500 });
+    return new Response('Error', { status: 500 });
   }
 };
 

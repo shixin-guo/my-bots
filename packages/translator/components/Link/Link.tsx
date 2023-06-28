@@ -1,4 +1,4 @@
-import NextLink from "next/link"
+import NextLink from 'next/link';
 
 export const Link: React.FC<React.AnchorHTMLAttributes<any>> = ({
   href,
@@ -9,5 +9,5 @@ export const Link: React.FC<React.AnchorHTMLAttributes<any>> = ({
     <NextLink href={href!}>
       <a {...props}>{children}</a>
     </NextLink>
-  )
-}
+  );
+};

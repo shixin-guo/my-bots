@@ -1,9 +1,17 @@
-export function getFileNameWithoutExtension(filename: string): string {
-  let dotIndex = filename.lastIndexOf(".");
+export function getFileNameAndType(filename: string): {
+  name: string;
+  type: string;
+} {
+  const dotIndex = filename.lastIndexOf('.');
   if (dotIndex == -1) {
-    dotIndex = filename.length;
+    return { name: filename, type: '' };
   }
-  const pathSeparatorIndex = Math.max(filename.lastIndexOf("/"), filename.lastIndexOf("\\"));
+  const pathSeparatorIndex = Math.max(
+    filename.lastIndexOf('/'),
+    filename.lastIndexOf('\\'),
+  );
   const startIndex = pathSeparatorIndex > -1 ? pathSeparatorIndex + 1 : 0;
-  return filename.slice(startIndex, dotIndex);
+  const name = filename.slice(startIndex, dotIndex);
+  const type = filename.slice(dotIndex + 1);
+  return { name, type };
 }

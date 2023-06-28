@@ -1,27 +1,29 @@
-import { useState } from "react";
+import { useState } from 'react';
 
 type Option = {
-  value: string,
-  label: string
+  value: string;
+  label: string;
 };
 
 type Props = {
-  options: Option[]
+  options: Option[];
 };
 
 const MultiSelect: React.FC<Props> = ({ options }) => {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState('');
 
   const toggleOption = (optionValue: string): void => {
     if (selectedOptions.includes(optionValue)) {
-      setSelectedOptions(selectedOptions.filter((value) => value !== optionValue));
+      setSelectedOptions(
+        selectedOptions.filter((value) => value !== optionValue),
+      );
     } else {
       setSelectedOptions([...selectedOptions, optionValue]);
     }
   };
 
-  const toggleSelectAll = ():void => {
+  const toggleSelectAll = (): void => {
     if (selectedOptions.length === options.length) {
       setSelectedOptions([]);
     } else {
@@ -29,14 +31,18 @@ const MultiSelect: React.FC<Props> = ({ options }) => {
     }
   };
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>):void => {
+  const handleInputChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ): void => {
     setInputValue(event.target.value);
   };
 
-  const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>):void => {
-    if (event.key === "Enter" && inputValue.trim() !== "") {
+  const handleInputKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement>,
+  ): void => {
+    if (event.key === 'Enter' && inputValue.trim() !== '') {
       setSelectedOptions([...selectedOptions, inputValue.trim()]);
-      setInputValue("");
+      setInputValue('');
     }
   };
 
@@ -44,7 +50,7 @@ const MultiSelect: React.FC<Props> = ({ options }) => {
     <div className="relative">
       <div className="relative">
         <button
-          className="bg-gray-200 py-1 px-3 rounded-md border border-gray-300 flex items-center space-x-2"
+          className="flex items-center space-x-2 rounded-md border border-gray-300 bg-gray-200 px-3 py-1"
           onClick={toggleSelectAll}
         >
           <input
@@ -55,7 +61,7 @@ const MultiSelect: React.FC<Props> = ({ options }) => {
           />
           <span>Select all</span>
         </button>
-        <div className="absolute w-full mt-1 rounded-md bg-white border border-gray-300 shadow-md">
+        <div className="absolute mt-1 w-full rounded-md border border-gray-300 bg-white shadow-md">
           {options.map((option) => (
             <label key={option.value} className="flex items-center p-2">
               <input
@@ -74,7 +80,7 @@ const MultiSelect: React.FC<Props> = ({ options }) => {
               onChange={handleInputChange}
               onKeyDown={handleInputKeyDown}
               placeholder="Type to add..."
-              className="w-full p-1 rounded-md border border-gray-400"
+              className="w-full rounded-md border border-gray-400 p-1"
             />
           </div>
         </div>
@@ -84,9 +90,9 @@ const MultiSelect: React.FC<Props> = ({ options }) => {
 };
 
 const options: Option[] = [
-  { value: "Chinese", label: "Chinese" },
-  { value: "English", label: "English" },
-  { value: "Japanese", label: "Japanese" },
+  { value: 'Chinese', label: 'Chinese' },
+  { value: 'English', label: 'English' },
+  { value: 'Japanese', label: 'Japanese' },
 ];
 
 const MultipleSelect = (): JSX.Element => {

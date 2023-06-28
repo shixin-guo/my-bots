@@ -4,7 +4,7 @@ export async function getBTCPrice(): Promise<string> {
   const response = await fetch(
     `https://api.coindesk.com/v1/bpi/historical/close.json?start=${date
       .toISOString()
-      .slice(0, 10)}&end=${date.toISOString().slice(0, 10)}`
+      .slice(0, 10)}&end=${date.toISOString().slice(0, 10)}`,
   );
   const data = await response.json();
   return data.bpi[date.toISOString().slice(0, 10)];
@@ -12,7 +12,7 @@ export async function getBTCPrice(): Promise<string> {
 // Fetch ETH price
 export async function getETHPrice(): Promise<string> {
   const response = await fetch(
-    `https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD&ts=${Date.now()}`
+    `https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD&ts=${Date.now()}`,
   );
   const data = await response.json();
   return data.USD;
@@ -24,7 +24,7 @@ export async function getETHPrice(): Promise<string> {
 
 export async function getZoomPrice(): Promise<string> {
   const regularMarketPrice = await fetch(
-    "https://query1.finance.yahoo.com/v8/finance/chart/ZM"
+    'https://query1.finance.yahoo.com/v8/finance/chart/ZM',
   )
     .then((response) => response.json())
     .then((data) => {

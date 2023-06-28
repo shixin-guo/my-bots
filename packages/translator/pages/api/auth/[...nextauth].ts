@@ -1,13 +1,13 @@
-import NextAuth from "next-auth";
+import NextAuth from 'next-auth';
 // import EmailProvider from "next-auth/providers/email";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import GitHubProvider from "next-auth/providers/github";
-import GoogleProvider from "next-auth/providers/google";
+import { PrismaAdapter } from '@next-auth/prisma-adapter';
+import GitHubProvider from 'next-auth/providers/github';
+import GoogleProvider from 'next-auth/providers/google';
 
 // import nodemailer from "nodemailer";
 // import Handlebars from "handlebars";
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from '@/lib/prisma';
 
 // import { readFileSync } from "fs";
 // import path from "path";
@@ -70,10 +70,10 @@ import { prisma } from "@/lib/prisma";
 
 export default NextAuth({
   pages: {
-    signIn: "/",
-    signOut: "/",
-    error: "/",
-    verifyRequest: "/",
+    signIn: '/',
+    signOut: '/',
+    error: '/',
+    verifyRequest: '/',
   },
   providers: [
     // EmailProvider({
@@ -82,7 +82,7 @@ export default NextAuth({
     // }),
     GitHubProvider({
       clientId: process.env.GITHUB_ID!,
-      clientSecret: process.env.GITHUB_SECRET!
+      clientSecret: process.env.GITHUB_SECRET!,
     }),
     GoogleProvider({
       clientId: process.env.GOOGLE_ID!,

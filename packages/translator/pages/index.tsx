@@ -1,75 +1,132 @@
-import { getSession } from "next-auth/react";
+// import { getSession } from 'next-auth/react';
 // import { GetStaticPropsContext } from "next";
-import { useMemo, useRef, useState } from "react";
-import { saveAs } from "file-saver";
-import JSZip from "jszip";
-import * as Checkbox from "@radix-ui/react-checkbox";
-import * as Switch from "@radix-ui/react-switch";
-import { CheckIcon } from "@radix-ui/react-icons";
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { saveAs } from 'file-saver';
+import JSZip from 'jszip';
+import * as Checkbox from '@radix-ui/react-checkbox';
+import * as Switch from '@radix-ui/react-switch';
+import { CheckIcon } from '@radix-ui/react-icons';
 
-import copyToClipboard from "@/utils/copyToClipboard";
-import { CodeBlock } from "@/components/CodeBlock";
-import Layout from "@/components/Layout";
-import { LanguageSelect, LanguageShortKey, languages } from "@/components/LanguageSelect";
-import { Upload } from "@/components/Upload";
-import { TranslateBody } from "@/types/types";
-import { getFileNameWithoutExtension } from "@/utils/fileUtils";
+import copyToClipboard from '@/utils/copyToClipboard';
+import { todayDate } from '@/utils/date';
+import { CodeBlock } from '@/components/CodeBlock';
+import Layout from '@/components/Layout';
+import {
+  LanguageSelect,
+  LanguageShortKey,
+  languages,
+} from '@/components/LanguageSelect';
+import { Upload } from '@/components/Upload';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
+import { TranslateBody } from '@/types/types';
+import { getFileNameAndType } from '@/utils/fileUtils';
+import * as ConvertUtils from '@/utils/convert';
 
 const testCode = `
-recording.management.download_video = Download Video (MP4)
-recording.management.download_cc = Download CC Transcript (VTT)
-dashboard.user_add_conversations_to_the_playlist = {senderName} added {playListCount} conversation(s) to the playlist <span class="notification-link-name">{playlistName}</span>
-dashboard.new_conversations_auto_added_to_the_playlist = {playListCount} new conversation(s) auto-added to the playlist <span class="notification-link-name">{playlistName}</span>
-dashboard.notifications_will_appear_here = Notifications will appear here
-analytics.over_time_tip = The percentage of conversations where {0} is mentioned over time.
-analytics.mention_by_deal = Mentions by Deals Won or Lost
-analytics.deal_tip = The percentage of conversations where {0} is mentioned by Deals Won or Lost.
-analytics.transcript_title = {0} Mentions in {1}'s Conversations
-analytics.chart_title_1 = {0} Mentioned in {1}
-analytics.chart_sub_title = The percentage of conversations hosted by {0} where this indicator is mentioned.
+download_video = Download Video (MP4)
+download_cc = Download CC Transcript (VTT)
+user_add_conversations_to_the_playlist = {senderName} added {playListCount} conversation(s) to the playlist <span class="notification-link-name">{playlistName}</span>
+auto_added_to_the_playlist = {playListCount} new conversation(s) auto-added to the playlist <span class="notification-link-name">{playlistName}</span>
+notifications_will_appear_here = Notifications will appear here
+over_time_tip = The percentage of conversations where {0} is mentioned over time.
+mention_by_deal = Mentions by Deals Won or Lost
+deal_tip = The percentage of conversations where {0} is mentioned by Deals Won or Lost.
+transcript_title = {0} Mentions in {1}'s Conversations
+chart_title = {0} Mentioned in {1}
+chart_sub_title = The percentage of conversations hosted by {0} where this indicator is mentioned.
 `;
-const todayDate = (): string => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
+
 interface handleTranslateProps {
-  originLang: LanguageShortKey,
-  exceptLang: LanguageShortKey,
-  content: string
+  originLang: LanguageShortKey;
+  exceptLang: LanguageShortKey;
+  content: string;
 }
-// interface StaticProps {
-//   props: {
-//     categories: string
-//   }
-// }
-// export async function getStaticProps({
-//   locale,
-//   locales,
-// }: GetStaticPropsContext):Promise<StaticProps> {
-//   const config = { locale, locales };
-//   return {
-//     props: { categories: "index" },
-//   };
-// }
 
+const StartButton: React.FC<{
+  onClick: () => void;
+  disabled?: boolean;
+  loading?: boolean;
+}> = ({ onClick, disabled, loading }) => {
+  return (
+    <button
+      className="w-[160px] cursor-pointer rounded-md
+              bg-blue-500 px-4 py-2 font-bold
+                text-slate-50 hover:bg-blue-600 active:bg-blue-700"
+      onClick={onClick}
+      disabled={disabled}
+    >
+      {loading ? 'Translating...' : 'Start Translate'}
+    </button>
+  );
+};
+
+const DownloadButton: React.FC<{
+  onClick: () => void;
+  disabled?: boolean;
+  translatedLangs: LanguageShortKey[];
+}> = ({ onClick, disabled, translatedLangs }) => {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        {/* todo why react server render wrong when don't have asChild */}
+        <TooltipTrigger asChild>
+          <button
+            className="float-right cursor-pointer rounded-md bg-emerald-500 px-2 py-2 text-slate-50 hover:bg-emerald-600 active:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+            onClick={onClick}
+            disabled={disabled}
+          >
+            Download Translated Files
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <span>
+            {translatedLangs.length > 0 &&
+              `[ ${translatedLangs.join(', ')} ] translated completed.`}
+          </span>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
 export default function Home(): JSX.Element {
-  const [inputLanguage, setInputLanguage] = useState<LanguageShortKey>("en-US");
-  const [outputLanguage, setOutputLanguage] = useState<LanguageShortKey>("zh-CN");
+  const [inputLanguage, setInputLanguage] = useState<LanguageShortKey>('en-US');
+  const [outputLanguage, setOutputLanguage] =
+    useState<LanguageShortKey>('zh-CN');
   const [enableMultiLang, setEnableMultiLang] = useState<boolean>(false);
-  const [selectedLangs, setSelectedLangs] = useState<LanguageShortKey[]>([inputLanguage, outputLanguage]);
-  const [translatedLangs, setTranslatedLangs] = useState<LanguageShortKey[]>([]);
-  const [inputCode, setInputCode] = useState<string>("");
-  const [outputCode, setOutputCode] = useState<string>("");
+  const [selectedLangs, setSelectedLangs] = useState<LanguageShortKey[]>([
+    inputLanguage,
+    outputLanguage,
+  ]);
+  const [translatedLangs, setTranslatedLangs] = useState<LanguageShortKey[]>(
+    [],
+  );
+  const [inputCode, setInputCode] = useState<string>('');
+  const [outputCode, setOutputCode] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const [hasTranslated, setHasTranslated] = useState<boolean>(false);
+  const [finished, setFinished] = useState<boolean>(false);
+  const [isMaskVisible, setMaskVisible] = useState(true);
+  const [isMaskVisible2, setMaskVisible2] = useState(true);
 
-  const uploadRef = useRef("");
+  const toggleMask = useCallback((visible: boolean) => {
+    setMaskVisible((prevVisible) => visible ?? !prevVisible);
+  }, []);
+  const toggleMask2 = useCallback((visible: boolean) => {
+    setMaskVisible2((prevVisible) => visible ?? !prevVisible);
+  }, []);
 
-  const translatedContent = useRef<{
-    [key: string]: string
+  const uploadRef = useRef({
+    name: '',
+    type: '',
+  });
+
+  const translatedContentRef = useRef<{
+    [key: string]: string;
   }>({});
 
   const isSelectedAll = useMemo(() => {
@@ -81,25 +138,36 @@ export default function Home(): JSX.Element {
       return {
         ...language,
         shortKey: language.shortKey as LanguageShortKey,
-        checked: isSelectedAll || (
-          [inputLanguage, outputLanguage, ... selectedLangs].find(l => l === language.shortKey) ? true : false
-        ),
-        disabled: isSelectedAll || language.shortKey === inputLanguage || language.shortKey === outputLanguage,
+        checked:
+          isSelectedAll ||
+          ([inputLanguage, outputLanguage, ...selectedLangs].find(
+            (l) => l === language.shortKey,
+          )
+            ? true
+            : false),
+        disabled:
+          isSelectedAll ||
+          language.shortKey === inputLanguage ||
+          language.shortKey === outputLanguage,
       };
     });
   }, [outputLanguage, inputLanguage, selectedLangs, isSelectedAll]);
 
-  const handleTranslate = async ({ originLang, exceptLang, content }: handleTranslateProps): Promise<void> => {
+  const handleTranslate = async ({
+    originLang,
+    exceptLang,
+    content,
+  }: handleTranslateProps): Promise<void> => {
     if (originLang === exceptLang) {
-      alert("Please select different languages.");
+      alert('Please select different languages.');
       return;
     }
     if (!content) {
-      alert("Please enter some code.");
+      alert('Please enter some code.');
       return;
     }
 
-    setOutputCode("");
+    setOutputCode('');
 
     const controller = new AbortController();
 
@@ -109,10 +177,10 @@ export default function Home(): JSX.Element {
       inputCode: content,
     };
 
-    const response = await fetch("/api/tsProperties", {
-      method: "POST",
+    const response = await fetch('/api/tsProperties', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       signal: controller.signal,
       body: JSON.stringify(body),
@@ -120,7 +188,7 @@ export default function Home(): JSX.Element {
 
     if (!response.ok) {
       // setLoading(false);
-      alert("Something went wrong.");
+      alert('Something went wrong.');
       return;
     }
 
@@ -128,7 +196,7 @@ export default function Home(): JSX.Element {
 
     if (!data) {
       // setLoading(false);
-      alert("Something went wrong.");
+      alert('Something went wrong.');
       return;
     }
 
@@ -143,237 +211,352 @@ export default function Home(): JSX.Element {
       if (exceptLang === outputLanguage) {
         setOutputCode((prevCode) => prevCode + chunkValue);
       }
-      if (!translatedContent.current[exceptLang]) {
-        translatedContent.current[exceptLang] = chunkValue;
+      if (!translatedContentRef.current[exceptLang]) {
+        translatedContentRef.current[exceptLang] = chunkValue;
       } else {
-        translatedContent.current[exceptLang] += chunkValue;
+        translatedContentRef.current[exceptLang] += chunkValue;
       }
     }
     setTranslatedLangs((prevLangs) => [...prevLangs, exceptLang]);
   };
+  const convertCode2Properties = (
+    code: string,
+    type: ConvertUtils.FileType,
+  ): string => {
+    let properties = '';
+    switch (type) {
+      case ConvertUtils.FileType.YAML:
+      case ConvertUtils.FileType.YML:
+        properties = ConvertUtils.yaml2Properties(code);
+        break;
+      case ConvertUtils.FileType.JSON:
+        properties = ConvertUtils.json2Properties(JSON.parse(code));
+        break;
+      // case 'md' |"mdx":
+      // todo
 
-  const handleTranslateMultiLanguages = async(langs: LanguageShortKey[]): Promise<void> => {
-    translatedContent.current = {};
-    setLoading(true);
-    setTranslatedLangs([]);
-    Promise.all(langs.filter(l => l !== inputLanguage).map(async (lang) => {
-      await handleTranslate({
-        originLang: inputLanguage,
-        exceptLang: lang,
-        content: inputCode,
-      });
-    })).then(() => {
-      copyToClipboard(outputCode);
+      default:
+        properties = code;
+    }
+    return properties;
+  };
+  const convertProperties2Code = (
+    properties: string,
+    type: ConvertUtils.FileType,
+  ): string => {
+    let code = '';
+    switch (type) {
+      case ConvertUtils.FileType.YAML:
+      case ConvertUtils.FileType.YML:
+        code = ConvertUtils.properties2YAML(properties);
+        break;
+      case ConvertUtils.FileType.JSON:
+        // todo
+        code = JSON.stringify(
+          ConvertUtils.properties2Json(properties),
+          null,
+          2,
+        );
+        break;
+      // case 'md' |"mdx":
+      // todo
 
-    }).catch((err) => {
-      alert(err);
-    }).finally(() => {
-      setHasTranslated(true);
-      setLoading(false);
-    });
+      default:
+        code = properties;
+    }
+    return code;
   };
 
-  const handleDownloadZip = async ():Promise<void> => {
+  const handleTranslateMultiLanguages = async (
+    selectedLangs: LanguageShortKey[],
+  ): Promise<void> => {
+    translatedContentRef.current = {};
+    setLoading(true);
+    setTranslatedLangs([]);
+
+    Promise.all(
+      selectedLangs
+        .filter((l) => l !== inputLanguage)
+        .map(async (selectedLang) => {
+          if (
+            !Object.values(ConvertUtils.FileType).includes(
+              uploadRef.current.type as ConvertUtils.FileType,
+            )
+          ) {
+            alert('Please upload a valid file.');
+            return;
+          }
+          await handleTranslate({
+            originLang: inputLanguage,
+            exceptLang: selectedLang,
+            content: convertCode2Properties(
+              inputCode,
+              uploadRef.current.type as ConvertUtils.FileType,
+            ),
+          });
+        }),
+    )
+      .then(() => {
+        copyToClipboard(outputCode);
+      })
+      .catch((err) => {
+        alert(err);
+      })
+      .finally(() => {
+        setFinished(true);
+        setLoading(false);
+      });
+  };
+
+  const handleDownloadZip = async (): Promise<void> => {
     const zip = new JSZip();
-    Object.keys(translatedContent.current).map((shortKey) => {
-      if (translatedContent.current[shortKey]) {
-        const fileNamePrefix = uploadRef.current || "i18n";
+    Object.keys(translatedContentRef.current).map((shortKey) => {
+      if (translatedContentRef.current[shortKey]) {
+        const fileNamePrefix = uploadRef.current.name || 'i18n';
         const filename = `${fileNamePrefix}_${shortKey}.properties`;
-        zip.file(filename, translatedContent.current[shortKey]);
+        zip.file(filename, translatedContentRef.current[shortKey]);
       }
     });
-    zip.generateAsync({ type: "blob" }).then(function (blob) {
+    zip.generateAsync({ type: 'blob' }).then(function (blob) {
       saveAs(blob, `i18n-${todayDate()}.zip`);
     });
   };
+  const handleInputLanguageChange = useCallback(
+    (lang: LanguageShortKey) => {
+      setInputLanguage(lang);
+      setSelectedLangs((prev) => {
+        if (isSelectedAll) {
+          return prev;
+        }
+        return prev.filter((key) => {
+          return key !== inputLanguage;
+        });
+      });
+      setInputCode('');
+      setOutputCode('');
+    },
+    [inputLanguage, isSelectedAll],
+  );
 
+  const handleOutputLanguageChange = useCallback(
+    (lang: LanguageShortKey) => {
+      setOutputLanguage(lang);
+      setSelectedLangs((prev) => {
+        if (isSelectedAll) {
+          return prev;
+        }
+        return [
+          ...prev.filter((key) => {
+            return key !== outputLanguage;
+          }),
+          lang,
+        ];
+      });
+      setOutputCode(translatedContentRef.current[lang]);
+    },
+    [outputLanguage, isSelectedAll],
+  );
+
+  const handleUploadedFile = async (files: File[]) => {
+    const input = await files[0].text();
+    setInputCode(input);
+    uploadRef.current = getFileNameAndType(files[0].name);
+    toggleMask(false);
+  };
+
+  useEffect(() => {
+    if (finished) {
+      Object.keys(translatedContentRef.current).map((shortKey) => {
+        if (translatedContentRef.current[shortKey]) {
+          translatedContentRef.current[shortKey] = convertProperties2Code(
+            translatedContentRef.current[shortKey],
+            uploadRef.current.type as ConvertUtils.FileType,
+          );
+        }
+      });
+      setOutputCode(translatedContentRef.current[outputLanguage]);
+      toggleMask2(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finished, toggleMask2]);
   return (
     <>
-      <div className="flex h-full min-h-screen flex-col items-center
-      bg-[url('https://tailwindui.com/img/beams-home@95.jpg')]
-       px-4 pb-20 sm:px-10 font-sans">
-
-        <Upload className='w-100 pt-6 pb-5 rounded-lg' onSuccess={
-          async (files) => {
-            const input = await files[0].text();
-            setInputCode(input);
-            uploadRef.current = getFileNameWithoutExtension(files[0].name);
-          }
-        }/>
-
-        <div className="mt-2 flex items-center space-x-2">
-          <button
-            className="w-[160px] cursor-pointer rounded-md
-             bg-blue-500 px-4 py-2 font-bold
-              hover:bg-blue-600 active:bg-blue-700 text-slate-50"
-            onClick={() => handleTranslateMultiLanguages(selectedLangs)}
-            disabled={loading}
-          >
-            {loading ? "Translating..." : "Start Translate"}
-          </button>
-        </div>
-        <div className="mt-2 text-center text-xs">
-          {loading
-            ? `Please wait... translating : ${selectedLangs.filter(l => {
-              return !translatedLangs.includes(l) && l !== inputLanguage;
-            }).join(", ")}`
-            : hasTranslated
-              ? `[  ${translatedLangs.join(", ")}  ] translated completed. and [ ${outputLanguage} ] copied to clipboard!`
-              : 'Enter some code and click "Start Translate"'}
-        </div>
-        <>
-          <div className="flex items-center mt-2 mb-2" style={{ display: "flex", alignItems: "center" }}>
-            <label className="text-[15px] leading-none" htmlFor="airplane-mode">
-            Translate to multiple languages:
-            </label>
-            <Switch.Root
-              className="ml-2 w-[42px] h-[25px] bg-slate-200 rounded-full
-              relative shadow-[0_2px_10px]
-              data-[state=checked]:bg-blue-500 outline-none cursor-default"
-              checked={enableMultiLang}
-              onCheckedChange={(checked: boolean) => {
-                setEnableMultiLang(checked);
-              }}
-            >
-              <Switch.Thumb className="block w-[21px] h-[21px] bg-white rounded-full
-               transition-transform
-              duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-[19px]" />
-            </Switch.Root>
-          </div>
-          {enableMultiLang && <>
-            <div className="w-[660px] flex flex-wrap justify-start items-center mb-5">
-              {Object.values(multipleLanguagesWithStatus).map((language) => {
-                return <div className="flex items-center justify-space-evenly mt-2 h-6" key={language.shortKey}>
-                  <Checkbox.Root
-                    key={language.shortKey}
-                    className="shadow-blackA7 hover:bg-violet3 flex h-[25px]
-                    border-[1px] border-slate-400
-                    w-[25px] appearance-none items-center justify-center
-                    rounded-[6px] bg-white outline-none
-                    data-[disabled]:cursor-not-allowed data-[disabled]:bg-[#9CA3AF]"
-                    id="c1"
-                    checked={language.checked}
-                    disabled={language.disabled}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedLangs((prev) => {
-                          return [...prev, language.shortKey];
-                        });
-                      } else {
-                        setSelectedLangs((prev) => prev.filter((key) => key !== language.shortKey));
-                      }
-                    }}
-                  >
-                    <Checkbox.Indicator className="text-[black]">
-                      <CheckIcon />
-                    </Checkbox.Indicator>
-                  </Checkbox.Root>
-                  <label className="pl-[8px] text-[16px] leading-none w-48" htmlFor="c1">
-                    {language.name}
-                    <span className="text-sm ">  ({language.shortKey})</span>
-                  </label>
-                </div>;
-              })}
+      <div className="flex h-full min-h-screen flex-col items-center border-t border-gray-200 bg-[url('https://tailwindui.com/img/beams-home@95.jpg')] px-4 pb-20 font-sans sm:px-10">
+        <div className="mb-4 flex w-full flex-col justify-between sm:flex-row sm:space-x-4">
+          <div className="flex h-full flex-col justify-center space-y-2 sm:w-2/4">
+            <div className="flex h-16 items-center text-[20px] text-base font-bold leading-7">
+              Original
             </div>
-            <div className="flex flex-wrap justify-start items-center">
-              <Checkbox.Root
-                className="shadow-blackA7 hover:bg-violet3 flex h-[25px] w-[25px]
-                appearance-none items-center justify-center
-                rounded-[6px] bg-white outline-none border-[1px] border-slate-400"
-                defaultChecked={isSelectedAll}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    setSelectedLangs(Object.keys(languages) as LanguageShortKey[]);
-                  } else {
-                    setSelectedLangs([inputLanguage, outputLanguage]);
-                  }
-                }}
-              >
-                <Checkbox.Indicator className="text-[black]">
-                  <CheckIcon />
-                </Checkbox.Indicator>
-              </Checkbox.Root>
-              <label className="pl-[8px] text-[16px] leading-none " htmlFor="c1">
-                Select All
-              </label>
-            </div>
-            <div className="text-sm mt-1 text-slate-400">
-               * pls should click "Start Translate" button again 👆 after change selected languages.
-            </div>
-          </>}
-        </>
-
-        <div className="flex w-full mb-4 max-w-[1200px] flex-col justify-between sm:flex-row sm:space-x-4">
-          <div className="h-full flex flex-col justify-center space-y-2 sm:w-2/4">
-            <div className="text-center text-xl font-bold">Original</div>
 
             <LanguageSelect
               language={inputLanguage}
               disabled={loading}
-              onChange={(lang) => {
-                setInputLanguage(lang);
-                setHasTranslated(false);
-                setSelectedLangs((prev) => {
-                  if (isSelectedAll) {
-                    return prev;
-                  }
-                  return prev.filter((key) => {
-                    return key !== inputLanguage;
-                  });
-                });
-                setInputCode("");
-                setOutputCode("");
-              }}
+              onChange={handleInputLanguageChange}
             />
-
-            <CodeBlock
-              code={inputCode}
-              editable={!loading}
-              onChange={(value) => {
-                setInputCode(value);
-                setHasTranslated(false);
-              }}
-              onClickTestCode={() => setInputCode(testCode)}
-            />
+            <div className="relative">
+              {isMaskVisible && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-200 bg-opacity-50">
+                  <Upload
+                    className="w-100 rounded-lg pb-5 pt-6"
+                    onSuccess={handleUploadedFile}
+                  />
+                </div>
+              )}
+              <CodeBlock
+                code={inputCode}
+                editable={!loading}
+                onChange={(value) => {
+                  setInputCode(value);
+                }}
+                onClickTestCode={() => setInputCode(testCode)}
+                onClickCreateEmptyFile={() => {
+                  setInputCode('');
+                  toggleMask(false);
+                }}
+              />
+            </div>
           </div>
           <div className="mt-8 flex h-full flex-col justify-center space-y-2 sm:mt-0 sm:w-2/4">
-            <div className="text-center text-xl font-bold">Translation</div>
+            <div className="flex h-16 items-center justify-between">
+              <span className="text-[20px] text-base font-bold leading-7">
+                Translation
+              </span>
+              {finished && (
+                <DownloadButton
+                  onClick={handleDownloadZip}
+                  disabled={loading || outputCode?.length === 0}
+                  translatedLangs={translatedLangs}
+                />
+              )}
+            </div>
 
+            {/* <p className="mt-1 text-slate-400">* download as an zip file and files named look like: demo_en-US.properties</p> */}
             <LanguageSelect
               language={outputLanguage}
               disabled={loading}
-              onChange={(lang) => {
-                setOutputLanguage(lang);
-                setSelectedLangs((prev) => {
-                  if (isSelectedAll) {
-                    return prev;
-                  }
-                  return [...prev.filter((key) => {
-                    return key !== outputLanguage;
-                  }), lang];
-                });
-                setOutputCode(translatedContent.current[lang]);
-              }}
+              onChange={handleOutputLanguageChange}
             />
-            <CodeBlock code={outputCode} />
+
+            <div className="relative">
+              {isMaskVisible2 && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-200 bg-opacity-50">
+                  <div className="mt-2 flex items-center space-x-2 ">
+                    {
+                      <StartButton
+                        onClick={() =>
+                          handleTranslateMultiLanguages(selectedLangs)
+                        }
+                        loading={loading}
+                      />
+                    }
+                  </div>
+                  <>
+                    <div
+                      className="mb-2 mt-2 flex items-center"
+                      style={{ display: 'flex', alignItems: 'center' }}
+                    >
+                      <label
+                        className="text-[15px] leading-none"
+                        htmlFor="airplane-mode"
+                      >
+                        Translate to multiple languages:
+                      </label>
+                      <Switch.Root
+                        className="relative ml-2 h-[25px] w-[42px] cursor-default rounded-full bg-slate-200 shadow-[0_2px_10px] outline-none data-[state=checked]:bg-blue-500"
+                        checked={enableMultiLang}
+                        onCheckedChange={(checked: boolean) => {
+                          setEnableMultiLang(checked);
+                        }}
+                      >
+                        <Switch.Thumb className="block h-[21px] w-[21px] translate-x-0.5 rounded-full bg-white transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[19px]" />
+                      </Switch.Root>
+                    </div>
+                    {enableMultiLang && (
+                      <>
+                        <div className="mb-5 flex flex-wrap items-center justify-center">
+                          {Object.values(multipleLanguagesWithStatus).map(
+                            (language) => {
+                              return (
+                                <div
+                                  className="justify-space-evenly mt-2 flex h-6 items-center"
+                                  key={language.shortKey}
+                                >
+                                  <Checkbox.Root
+                                    key={language.shortKey}
+                                    className="shadow-blackA7 hover:bg-violet3 flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-[6px] border-[1px] border-slate-400 bg-white outline-none data-[disabled]:cursor-not-allowed data-[disabled]:bg-[#9CA3AF]"
+                                    id="c1"
+                                    checked={language.checked}
+                                    disabled={language.disabled}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setSelectedLangs((prev) => {
+                                          return [...prev, language.shortKey];
+                                        });
+                                      } else {
+                                        setSelectedLangs((prev) =>
+                                          prev.filter(
+                                            (key) => key !== language.shortKey,
+                                          ),
+                                        );
+                                      }
+                                    }}
+                                  >
+                                    <Checkbox.Indicator className="text-[black]">
+                                      <CheckIcon />
+                                    </Checkbox.Indicator>
+                                  </Checkbox.Root>
+                                  <label
+                                    className="w-48 pl-[8px] text-[16px] leading-none"
+                                    htmlFor="c1"
+                                  >
+                                    {language.name}
+                                    <span className="text-sm ">
+                                      {' '}
+                                      ({language.shortKey})
+                                    </span>
+                                  </label>
+                                </div>
+                              );
+                            },
+                          )}
+                        </div>
+                        <div className="flex flex-wrap items-center justify-start">
+                          <Checkbox.Root
+                            className="shadow-blackA7 hover:bg-violet3 flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-[6px] border-[1px] border-slate-400 bg-white outline-none"
+                            defaultChecked={isSelectedAll}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedLangs(
+                                  Object.keys(languages) as LanguageShortKey[],
+                                );
+                              } else {
+                                setSelectedLangs([
+                                  inputLanguage,
+                                  outputLanguage,
+                                ]);
+                              }
+                            }}
+                          >
+                            <Checkbox.Indicator className="text-[black]">
+                              <CheckIcon />
+                            </Checkbox.Indicator>
+                          </Checkbox.Root>
+                          <label
+                            className="pl-[8px] text-[16px] leading-none "
+                            htmlFor="c1"
+                          >
+                            Select All
+                          </label>
+                        </div>
+                      </>
+                    )}
+                  </>
+                </div>
+              )}
+              <CodeBlock code={outputCode} />
+            </div>
           </div>
         </div>
-
-        <button
-          className="mt-4 w-[480px] cursor-pointer rounded-md
-          bg-emerald-500 px-4 py-2 font-bold
-          hover:bg-emerald-600 active:bg-emerald-700
-          text-slate-50
-          disabled:cursor-not-allowed disabled:bg-[#9CA3AF]"
-          onClick={handleDownloadZip}
-          disabled={loading || outputCode?.length === 0}
-        >
-         ⬇️  Download Translated Files
-        </button>
-        <ul>
-          <li></li>
-        </ul>
-        <p className="mt-1 text-slate-400">* download as an zip file and files named look like: demo_en-US.properties</p>
       </div>
     </>
   );

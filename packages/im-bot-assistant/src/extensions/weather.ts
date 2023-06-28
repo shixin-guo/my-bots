@@ -1,28 +1,28 @@
-import axios from "axios";
-import { config } from "dotenv";
-config({ path: ".env" });
-const city = "Hefei";
+import axios from 'axios';
+import { config } from 'dotenv';
+config({ path: '.env' });
+const city = 'Hefei';
 const apiKey = process.env.WEATHER_API_KEY!;
-const apiUrl = "http://api.openweathermap.org/data/2.5/weather";
+const apiUrl = 'http://api.openweathermap.org/data/2.5/weather';
 
-const GetWeatherDataTips = async (): Promise <string> => axios({
-  url: apiUrl,
-  method: "GET",
-  params: {
-    q: city,
-    appid: apiKey,
-    units: "metric"
-  },
-})
-  .then(({ data: weatherData }) => {
-
-    const { weather, main, name, wind } = weatherData;
-    return `There is *${weather[0].description}* in ${name} with a temperature of *${main.feels_like}* degrees Celsius and a humidity of ${main.humidity}%. There is also a wind with a speed of ${wind.speed} and gusts up to ${wind.gust} meters per second.`;
+const GetWeatherDataTips = async (): Promise<string> =>
+  axios({
+    url: apiUrl,
+    method: 'GET',
+    params: {
+      q: city,
+      appid: apiKey,
+      units: 'metric',
+    },
   })
-  .catch((error) => {
-    console.error(`Error fetching weather data: ${error}`);
-    return "Error fetching weather data";
-  });
+    .then(({ data: weatherData }) => {
+      const { weather, main, name, wind } = weatherData;
+      return `There is *${weather[0].description}* in ${name} with a temperature of *${main.feels_like}* degrees Celsius and a humidity of ${main.humidity}%. There is also a wind with a speed of ${wind.speed} and gusts up to ${wind.gust} meters per second.`;
+    })
+    .catch((error) => {
+      console.error(`Error fetching weather data: ${error}`);
+      return 'Error fetching weather data';
+    });
 export default GetWeatherDataTips;
 
 // {

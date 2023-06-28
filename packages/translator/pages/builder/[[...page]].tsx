@@ -1,34 +1,32 @@
-import { useRouter } from "next/router";
-import type { GetStaticPropsContext, InferGetStaticPropsType } from "next";
-import DefaultErrorPage from "next/error";
-import Head from "next/head";
-import React from "react";
-import {
-  BuilderComponent,
-  builder,
-  useIsPreviewing,
-} from "@builder.io/react";
+import { useRouter } from 'next/router';
+import type { GetStaticPropsContext, InferGetStaticPropsType } from 'next';
+import DefaultErrorPage from 'next/error';
+import Head from 'next/head';
+import React from 'react';
+import { BuilderComponent, builder, useIsPreviewing } from '@builder.io/react';
 
-import "@builder.io/widgets";
+import '@builder.io/widgets';
 
 /*
   Initialize the Builder SDK with your organization's API Key
   The API Key can be found on: https://builder.io/account/settings
 */
-import builderConfig from "@/config/builder";
+import builderConfig from '@/config/builder';
 
 builder.init(builderConfig.apiKey);
 
-export async function getStaticProps({ params } : GetStaticPropsContext<{ page: string[], locale: string }>) {
+export async function getStaticProps({
+  params,
+}: GetStaticPropsContext<{ page: string[]; locale: string }>) {
   /*
     Fetch the first page from Builder that matches the current URL.
     The `userAttributes` field is used for targeting content,
     learn more here: https://www.builder.io/c/docs/targeting-with-builder
   */
   const page = await builder
-    .get("page", {
+    .get('page', {
       userAttributes: {
-        urlPath: "/builder/" + (params?.page?.join("/") || ""),
+        urlPath: '/builder/' + (params?.page?.join('/') || ''),
       },
     })
     .toPromise();
@@ -47,8 +45,8 @@ export async function getStaticPaths() {
     Using the `fields` option will limit the size of the response
     and only return the `data.url` field from the matching pages.
   */
-  const pages = await builder.getAll("page", {
-    fields: "data.url", // only request the `data.url` field
+  const pages = await builder.getAll('page', {
+    fields: 'data.url', // only request the `data.url` field
     options: { noTargeting: true },
     limit: 0,
   });
@@ -59,7 +57,9 @@ export async function getStaticPaths() {
   };
 }
 
-export default function Page({ page }: InferGetStaticPropsType<typeof getStaticProps>) {
+export default function Page({
+  page,
+}: InferGetStaticPropsType<typeof getStaticProps>) {
   const router = useRouter();
   /*
     This flag indicates if you are viewing the page in the Builder editor.
